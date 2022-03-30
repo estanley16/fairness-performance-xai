@@ -1,4 +1,4 @@
-# adv-med-img-processing-project
+# MDSC 689.03: Advanced Medical Image Processing Final Project
 
 ## Code
 ### /preprocessing
