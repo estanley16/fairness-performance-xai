@@ -27,7 +27,9 @@ def itk_nifti_reader(fname):
     return reader.Execute()
 
 def compute_overlap(image1, image2):
-
+    '''
+    compute Dice coefficient overlap between 2 images
+    '''
     image1= sitk.Cast(image1, sitk.sitkInt16)
     image2= sitk.Cast(image2, sitk.sitkInt16)
 
@@ -37,15 +39,19 @@ def compute_overlap(image1, image2):
     return dice
 
 def get_DC_list(group, group_list):
+    '''
+    get Dice coefficients for combination of "group" + every label in "group_list"
+    '''
     DC_list = []
+    #read image corresponding to "group"
     fname1 = SOURCE_DIR + 'thresh_' + str(CLEANUP_THRESHOLD_VAL) + '_' + EXP + '_' + FOLD + '_' + group + '_registeredAverage.nii.gz'
     image1 = itk_nifti_reader(fname1)
 
-
+    #loop through every label in "group_list" and compute overlap with "group"
     for g in group_list:
+        #read image
         fname2 = SOURCE_DIR + 'thresh_' + str(CLEANUP_THRESHOLD_VAL) + '_' + EXP + '_' + FOLD + '_' + g + '_registeredAverage.nii.gz'
         image2 = itk_nifti_reader(fname2)
-
 
         dc = compute_overlap(image1, image2)
         print('{}, {}, Dice = {}'.format(group, g, dc))
@@ -72,10 +78,11 @@ bm_dc = get_DC_list(groups[3], groups)
 bf_dc = get_DC_list(groups[4], groups)
 
 
+#plot Dice values with a heatmap
 dc_matrix = np.concatenate((agg_dc, wm_dc, wf_dc, bm_dc, bf_dc), axis=0)
 
 mask = np.zeros_like(dc_matrix)
-mask[np.triu_indices_from(mask, k=1)] = 1.00
+mask[np.triu_indices_from(mask, k=1)] = 1.00 #diagonal values always equal 1
 
 dc_heatmap = sns.heatmap(dc_matrix, mask=mask, cmap="Purples", cbar = False, annot=True, annot_kws = {'size': 14}, fmt ='.3f')
 

@@ -110,6 +110,13 @@ def render_surface(surface):
 
 
 def write_nifti(image, reader, outpath):
+    '''
+    writes a nifti file
+    inputs:
+    -image: image to write (vtkimagedata)
+    -reader: vtk nifti image reader that contains header information to include with saved image
+    -outpath: where to save the image
+    '''
     writer = vtk.vtkNIFTIImageWriter()
     writer.SetInputData(image)
 

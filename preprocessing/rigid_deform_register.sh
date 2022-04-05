@@ -28,6 +28,7 @@ do
 	OUTPUT_PATH="${OUTPUT_DIR}/${SUBJECT_ID}"
 	mkdir -p "${OUTPUT_DIR}/${SUBJECT_ID}/".
 
+	#create job script for each file
 	cat >rigidreg_${SUBJECT_ID}.sh <<-EOF1
 	#!/bin/bash
 	#SBATCH --account=def-nforkert
@@ -48,19 +49,19 @@ do
 
 	echo "Registering atlas to ${SUBJECT_ID} T1..."
         ${ANTSPATH}antsRegistrationSyNQuick.sh -d 3 \
-						-f ${IMG} \
-						-m ${ATLAS} \
-						-t s \
-						-o ${OUTPUT_PATH}/${SUBJECT_ID}_atlas_registered_ \
+						-f ${IMG} \ #fixed (subject scan)
+						-m ${ATLAS} \ #moving (NIHPD)
+						-t s \ #nonlinear registration
+						-o ${OUTPUT_PATH}/${SUBJECT_ID}_atlas_registered_ \ #output prefix
 
 	echo "Transforming template mask into patient specific mask using atlas transformations..."
 	${ANTSPATH}antsApplyTransforms -d 3 \
-					-i ${ATLAS_MASK} \
-					-r ${IMG} \
-                   			-o ${OUTPUT_PATH}/${SUBJECT_ID}_mask_transformed.nii.gz \
-					-n NearestNeighbor \
-					-t ${OUTPUT_PATH}/${SUBJECT_ID}_atlas_registered_1Warp.nii.gz \
-					-t ${OUTPUT_PATH}/${SUBJECT_ID}_atlas_registered_0GenericAffine.mat \
+					-i ${ATLAS_MASK} \ #input (mask)
+					-r ${IMG} \ #reference image (subject scan)
+                   			-o ${OUTPUT_PATH}/${SUBJECT_ID}_mask_transformed.nii.gz \ #output prefix
+					-n NearestNeighbor \ #interpolation method
+					-t ${OUTPUT_PATH}/${SUBJECT_ID}_atlas_registered_1Warp.nii.gz \ #deformation field
+					-t ${OUTPUT_PATH}/${SUBJECT_ID}_atlas_registered_0GenericAffine.mat \ #affine transformation matrix
 					-v 1 \
 
 
@@ -74,20 +75,20 @@ do
 	echo "Applying rigid registration..."
 	#rigidly register skull stripped image to skull stripped atlas
         ${ANTSPATH}antsRegistrationSyNQuick.sh -d 3 \
-						-f ${ATLAS_STRIPPED} \
-						-m ${OUTPUT_PATH}/${SUBJECT_ID}_raw_T1strip.nii.gz \
-						-t r \
-						-o ${OUTPUT_PATH}/${SUBJECT_ID}_rigidreg_T1strip_ \
+						-f ${ATLAS_STRIPPED} \ #fixed (NIHPD)
+						-m ${OUTPUT_PATH}/${SUBJECT_ID}_raw_T1strip.nii.gz \ #moving (stripped subject scan)
+						-t r \ # rigid registration
+						-o ${OUTPUT_PATH}/${SUBJECT_ID}_rigidreg_T1strip_ \ #output prefix
 
 
 	echo "Applying deformable registration to rigid images"
 	#nonlinearly register skull stripped rigid image to skull stripped atlas (-so -> deformable syn only)
 	#required for downstream transformation of subject saliency maps to atlas
        ${ANTSPATH}antsRegistrationSyNQuick.sh -d 3 \
-						-f ${ATLAS_STRIPPED} \
-						-m ${OUTPUT_PATH}/${SUBJECT_ID}_rigidreg_T1strip_Warped.nii.gz \
-						-t so \
-						-o ${OUTPUT_PATH}/${SUBJECT_ID}_deformreg_T1strip_ \
+						-f ${ATLAS_STRIPPED} \ #fixed (NIHPD)
+						-m ${OUTPUT_PATH}/${SUBJECT_ID}_rigidreg_T1strip_Warped.nii.gz \ #moving (rigid subject scan)
+						-t so \ #nonlinear registration only
+						-o ${OUTPUT_PATH}/${SUBJECT_ID}_deformreg_T1strip_ \ #output prefix
 
 
 	EOF1
