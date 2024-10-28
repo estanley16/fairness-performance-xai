@@ -1,4 +1,4 @@
-# Code for "Fairness-related performance and explainability effects in deep learning models for brain image analysis"
+## Code for "Fairness-related performance and explainability effects in deep learning models for brain image analysis" / MDSC 689.03 Project
 
 ### /preprocessing
 * **rigid_deform_register.sh**: bash script for applying rigid + deformable registrations of each subject's T1w MRI to the NIHPD atlas 
